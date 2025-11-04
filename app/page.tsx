@@ -13,6 +13,18 @@ import {
   Trash,
   X,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 export default function Home() {
   return (
     <main className="w-full h-screen bg-gray-100 flex justify-center items-center">
@@ -56,10 +68,28 @@ export default function Home() {
               <ListCheck size={18} />
               <p className="text-xs">tarefas concluidas (3/3)</p>
             </div>
-            <Button className="text-xs h-7 cursor-pointer" variant={"outline"}>
-              <Trash />
-              Limpar tarefas concluidas
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  className="text-xs h-7 cursor-pointer"
+                  variant={"outline"}
+                >
+                  <Trash />
+                  Limpar tarefas concluidas
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Tem certeza que deseja excluir x itens ?
+                  </AlertDialogTitle>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction>Continue</AlertDialogAction>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
           <div className="h-2 w-ful bg-gray-100 mt-4 rounded-md">
             <div
