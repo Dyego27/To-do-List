@@ -32,7 +32,25 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { getTasks } from "@/actions/get-tasks-from-bd";
+import { useEffect, useState } from "react";
+import { Tasks } from "@/lib/generated/prisma";
+
 export default function Table() {
+  const [taskList, setTaskList] = useState<Tasks[]>([]);
+
+  const handleGetTasks = async () => {
+    const tasks = await getTasks();
+
+    if (!tasks) return;
+
+    setTaskList(tasks);
+  };
+
+  useEffect(() => {
+    handleGetTasks();
+  }, []);
+
   return (
     <main className="w-full h-screen bg-gray-100 flex justify-center items-center">
       <Card className="w-lg p-4">
@@ -43,7 +61,6 @@ export default function Table() {
             <PlusIcon /> Cadastrar
           </Button>
         </CardHeader>
-
         <CardContent>
           <Separator className="mb-4" />
           <div className="flex gap-2">
@@ -61,27 +78,32 @@ export default function Table() {
             </Badge>
           </div>
           <div className="mt-4 border-b-1">
-            <div className=" h-14 flex justify-between items-center border-b-1 border-t-1">
-              <div className="w-1 h-full bg-green-300"></div>
-              <p className="flex-1 px-2 text-sm">Estudar React</p>
-              <div className="flex items-center gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Edit size={14} className="cursor-pointer" />
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Editar Tarefa</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex gap-2">
-                      <Input placeholder="Editar tarefa" />
-                      <Button className="cursor-pointer">Editar</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Trash size={14} className="cursor-pointer" />
+            {taskList.map((task) => (
+              <div
+                className=" h-14 flex justify-between items-center border-b-1 border-t-1 "
+                key={task.id}
+              >
+                <div className="w-1 h-full bg-green-300"></div>
+                <p className="flex-1 px-2 text-sm">{task.task}</p>
+                <div className="flex items-center gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Edit size={14} className="cursor-pointer" />
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Editar Tarefa</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex gap-2">
+                        <Input placeholder="Editar tarefa" />
+                        <Button className="cursor-pointer">Editar</Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Trash size={14} className="cursor-pointer" />
+                </div>
               </div>
-            </div>
+            ))}
           </div>
 
           <div className="flex justify-between mt-4">
