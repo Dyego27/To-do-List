@@ -37,7 +37,7 @@ import { useEffect, useState } from "react";
 import { Tasks } from "@/lib/generated/prisma/client";
 import { NewTask } from "@/actions/add-task";
 import { deleteTask } from "@/actions/delete-task";
-
+import { toast } from "sonner";
 export default function Table() {
   const [taskList, setTaskList] = useState<Tasks[]>([]);
   const [task, setTask] = useState<string>("");
@@ -64,6 +64,8 @@ export default function Table() {
 
       if (!myNewTask) return;
 
+      toast.success("Atividade adicionada com sucesso !");
+
       setTaskList((prevTasks) => [...prevTasks, myNewTask]);
 
       setTask("");
@@ -78,7 +80,7 @@ export default function Table() {
 
       const deletedTask = await deleteTask(id);
       if (!deletedTask) return;
-
+      toast.warning("Atividade excluida com sucesso !");
       await handleGetTasks();
     } catch (error) {
       throw error;
