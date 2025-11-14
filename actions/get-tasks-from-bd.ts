@@ -2,11 +2,15 @@
 import { prisma } from "@/utils/prisma";
 
 export const getTasks = async () => {
-  const tasks = await prisma.tasks.findMany();
+  try {
+    const tasks = await prisma.tasks.findMany();
 
-  if (!tasks) return;
+    console.log("Tarefas buscadas no BD:", tasks);
 
-  console.log(tasks);
+    return tasks;
+  } catch (error) {
+    console.error("Erro ao buscar tarefas:", error);
 
-  return tasks;
+    throw error;
+  }
 };

@@ -34,29 +34,78 @@ import {
 
 import { getTasks } from "@/actions/get-tasks-from-bd";
 import { useEffect, useState } from "react";
-import { Tasks } from "@/lib/generated/prisma";
+import { Tasks } from "@/lib/generated/prisma/client";
+import { NewTask } from "@/actions/add-task";
+import { deleteTask } from "@/actions/delete-task";
 
 export default function Table() {
   const [taskList, setTaskList] = useState<Tasks[]>([]);
+  const [task, setTask] = useState<string>("");
+
+  console.log(task);
 
   const handleGetTasks = async () => {
-    const tasks = await getTasks();
+    try {
+      const tasks = await getTasks();
 
-    if (!tasks) return;
-
-    setTaskList(tasks);
+      if (tasks && tasks.length > 0) {
+        setTaskList(tasks);
+      }
+    } catch (error) {
+      throw error;
+    }
   };
 
+  const handleAddTask = async () => {
+    try {
+      if (!task.trim()) return;
+
+      const myNewTask = await NewTask(task);
+
+      if (!myNewTask) return;
+
+      setTaskList((prevTasks) => [...prevTasks, myNewTask]);
+
+      setTask("");
+    } catch (error) {
+      console.error("Erro ao adicionar tarefa:", error);
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      if (!id) return;
+
+      const deletedTask = await deleteTask(id);
+      if (!deletedTask) return;
+
+      await handleGetTasks();
+    } catch (error) {
+      throw error;
+    }
+  };
   useEffect(() => {
-    handleGetTasks();
+    const fetchTasks = async () => {
+      await handleGetTasks();
+    };
+
+    fetchTasks();
   }, []);
 
   return (
     <main className="w-full h-screen bg-gray-100 flex justify-center items-center">
       <Card className="w-lg p-4">
         <CardHeader className="flex gap-2">
-          <Input placeholder="Adicionar tarefa" />
-          <Button variant={"default"} className="cursor-pointer">
+          <Input
+            placeholder="Adicionar tarefa"
+            value={task}
+            onChange={(e) => setTask(e.target.value)}
+          />
+          <Button
+            variant={"default"}
+            className="cursor-pointer"
+            onClick={handleAddTask}
+          >
             {" "}
             <PlusIcon /> Cadastrar
           </Button>
@@ -100,7 +149,11 @@ export default function Table() {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  <Trash size={14} className="cursor-pointer" />
+                  <Trash
+                    size={14}
+                    className="cursor-pointer"
+                    onClick={() => handleDeleteTask(task.id)}
+                  />
                 </div>
               </div>
             ))}
@@ -136,7 +189,7 @@ export default function Table() {
           </div>
           <div className="h-2 w-ful bg-gray-100 mt-4 rounded-md">
             <div
-              className="h-full  bg-blue-500 rounded-md"
+              className="h-full  bg-blue-500 rounded-md"
               style={{
                 width: "50%",
               }}
