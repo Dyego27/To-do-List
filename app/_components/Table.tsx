@@ -38,6 +38,8 @@ import { Tasks } from "@/lib/generated/prisma/client";
 import { NewTask } from "@/actions/add-task";
 import { deleteTask } from "@/actions/delete-task";
 import { toast } from "sonner";
+import { updateTaskStatus } from "@/actions/toggle-done";
+import EditTask from "./EditTask";
 export default function Table() {
   const [taskList, setTaskList] = useState<Tasks[]>([]);
   const [task, setTask] = useState<string>("");
@@ -86,6 +88,32 @@ export default function Table() {
       throw error;
     }
   };
+
+  const handleToggleTask = async (taskid: string) => {
+    const previousTasks = [...taskList];
+
+    try {
+      setTaskList((prev) => {
+        const updateTaskList = prev.map((task) => {
+          if (task.id === taskid) {
+            return {
+              ...task,
+              done: !task.done,
+            };
+          } else {
+            return task;
+          }
+        });
+
+        return updateTaskList;
+      });
+      await updateTaskStatus(taskid);
+    } catch (error) {
+      setTaskList(previousTasks);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchTasks = async () => {
       await handleGetTasks();
@@ -134,23 +162,21 @@ export default function Table() {
                 className=" h-14 flex justify-between items-center border-b-1 border-t-1 "
                 key={task.id}
               >
-                <div className="w-1 h-full bg-green-300"></div>
-                <p className="flex-1 px-2 text-sm">{task.task}</p>
+                <div
+                  className={`${
+                    task.done
+                      ? "w-1 h-full bg-green-400"
+                      : "w-1 h-full bg-red-400"
+                  }`}
+                ></div>
+                <p
+                  className="flex-1 px-2 text-sm cursor-pointer hover:text-gray-600"
+                  onClick={() => handleToggleTask(task.id)}
+                >
+                  {task.task}
+                </p>
                 <div className="flex items-center gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Edit size={14} className="cursor-pointer" />
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Editar Tarefa</DialogTitle>
-                      </DialogHeader>
-                      <div className="flex gap-2">
-                        <Input placeholder="Editar tarefa" />
-                        <Button className="cursor-pointer">Editar</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <EditTask task={task} handleGetTasks={handleGetTasks} />
                   <Trash
                     size={14}
                     className="cursor-pointer"
