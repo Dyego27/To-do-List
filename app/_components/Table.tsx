@@ -13,6 +13,7 @@ import {
   Sigma,
   Trash,
   X,
+  LoaderCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -40,10 +41,15 @@ import { deleteTask } from "@/actions/delete-task";
 import { toast } from "sonner";
 import { updateTaskStatus } from "@/actions/toggle-done";
 import EditTask from "./EditTask";
+import FilterComponent from "./FilterComponent";
+import { FilterType } from "./FilterComponent";
+import { deletedCompletedTasks } from "@/actions/clearCompletedTasks";
 export default function Table() {
   const [taskList, setTaskList] = useState<Tasks[]>([]);
   const [task, setTask] = useState<string>("");
-
+  const [loading, setLoading] = useState<boolean>(false);
+  const [currentFilter, setCurrentFilter] = useState<FilterType>("all");
+  const [filteredTasks, setFilteredTasks] = useState<Tasks[]>([]);
   console.log(task);
 
   const handleGetTasks = async () => {
@@ -59,8 +65,13 @@ export default function Table() {
   };
 
   const handleAddTask = async () => {
+    setLoading(true);
     try {
-      if (!task.trim()) return;
+      if (!task.length === 0 || !task) {
+        toast.error("Insira uma atividade");
+        setLoading(false);
+        return;
+      }
 
       const myNewTask = await NewTask(task);
 
@@ -74,6 +85,7 @@ export default function Table() {
     } catch (error) {
       console.error("Erro ao adicionar tarefa:", error);
     }
+    setLoading(false);
   };
 
   const handleDeleteTask = async (id: string) => {
@@ -114,6 +126,13 @@ export default function Table() {
     }
   };
 
+  const clearCompletedTasks = async () => {
+    const deletedTasks = await deletedCompletedTasks();
+    if (!deletedTasks) return;
+
+    setTaskList(deletedTasks);
+  };
+
   useEffect(() => {
     const fetchTasks = async () => {
       await handleGetTasks();
@@ -121,6 +140,22 @@ export default function Table() {
 
     fetchTasks();
   }, []);
+
+  useEffect(() => {
+    switch (currentFilter) {
+      case "all":
+        setFilteredTasks(taskList);
+        break;
+      case "pending":
+        const pedingTasks = taskList.filter((task) => !task.done);
+        setFilteredTasks(pedingTasks);
+        break;
+      case "completed":
+        const completedTasks = taskList.filter((task) => task.done);
+        setFilteredTasks(completedTasks);
+        break;
+    }
+  }, [currentFilter, taskList]);
 
   return (
     <main className="w-full h-screen bg-gray-100 flex justify-center items-center">
@@ -136,28 +171,23 @@ export default function Table() {
             className="cursor-pointer"
             onClick={handleAddTask}
           >
-            {" "}
-            <PlusIcon /> Cadastrar
+            {loading ? <LoaderCircle className="animate-spin" /> : <PlusIcon />}
+            Cadastrar
           </Button>
         </CardHeader>
         <CardContent>
           <Separator className="mb-4" />
-          <div className="flex gap-2">
-            <Badge className="cursor-pointer" variant={"outline"}>
-              <List />
-              Todas
-            </Badge>
-            <Badge className="cursor-pointer" variant={"outline"}>
-              <X />
-              Não finalizadas
-            </Badge>
-            <Badge className="cursor-pointer" variant={"outline"}>
-              <Check />
-              Concluidas
-            </Badge>
-          </div>
+          <FilterComponent
+            currentFilter={currentFilter}
+            setCurrentFilter={setCurrentFilter}
+          />
           <div className="mt-4 border-b-1">
-            {taskList.map((task) => (
+            {taskList.length === 0 && (
+              <p className="text-xs border-t-2 py-4">
+                Você nâo tem nenhuma atividade cadastrada.
+              </p>
+            )}
+            {filteredTasks.map((task) => (
               <div
                 className=" h-14 flex justify-between items-center border-b-1 border-t-1 "
                 key={task.id}
@@ -190,7 +220,11 @@ export default function Table() {
           <div className="flex justify-between mt-4">
             <div className="flex gap-2 items-center">
               <ListCheck size={18} />
-              <p className="text-xs">tarefas concluidas (3/3)</p>
+              <p className="text-xs">
+                tarefas concluidas (
+                {taskList.filter((task) => !task.done).length}/{taskList.length}
+                )
+              </p>
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -209,7 +243,12 @@ export default function Table() {
                   </AlertDialogTitle>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogAction>Continue</AlertDialogAction>
+                  <AlertDialogAction
+                    className="cursor-pointer"
+                    onClick={clearCompletedTasks}
+                  >
+                    Sim
+                  </AlertDialogAction>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -219,13 +258,17 @@ export default function Table() {
             <div
               className="h-full  bg-blue-500 rounded-md"
               style={{
-                width: "50%",
+                width: `${
+                  (taskList.filter((task) => task.done).length /
+                    taskList.length) *
+                  100
+                }`,
               }}
             ></div>
           </div>
           <div className="flex justify-end items-center mt-2 gap-2">
             <Sigma size={18} />
-            <p className="text-xs">3 tarefas no total</p>
+            <p className="text-xs">{taskList.length} tarefas no total</p>
           </div>
         </CardContent>
       </Card>

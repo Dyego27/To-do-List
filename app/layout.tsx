@@ -20,16 +20,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Toaster position="top-right" richColors />
+      {/* Adicione a flag aqui: */}
+      <body className={`...`} suppressHydrationWarning={true}>
         {children}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );
