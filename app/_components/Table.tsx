@@ -239,7 +239,8 @@ export default function Table() {
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    Tem certeza que deseja excluir x itens ?
+                    Tem certeza que deseja excluir{" "}
+                    {taskList.filter((task) => task.done).length} itens ?
                   </AlertDialogTitle>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
